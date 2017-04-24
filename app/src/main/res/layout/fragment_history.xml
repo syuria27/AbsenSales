@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="5dp"
+    tools:context=".fragment.HistoryFragment">
+    <ImageView
+        android:id="@+id/imgTanggal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/ic_date_range_black_24dp"/>
+    <TextView
+        android:id="@+id/txtTanggal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TANGGAL"
+        android:textStyle="bold"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/imgTanggal"/>
+
+    <ListView
+        android:id="@+id/lvHistoryAbsen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txtTanggal"
+        android:layout_above="@+id/lytButton"/>
+
+    <LinearLayout
+        android:id="@+id/lytButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true">
+
+        <Button
+            android:id="@+id/btnCariMasuk"
+            android:text="CARI ABSEN MASUK"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight=".50"
+            android:layout_margin="5dp"
+            android:background="@color/colorPrimary"
+            android:textColor="@color/textColorPrimary"/>
+
+        <Button
+            android:id="@+id/btnCarinPulang"
+            android:text="CARI ABSEN PULANG"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight=".50"
+            android:layout_margin="5dp"
+            android:background="@color/colorPrimary"
+            android:textColor="@color/textColorPrimary" />
+    </LinearLayout>
+</RelativeLayout>
