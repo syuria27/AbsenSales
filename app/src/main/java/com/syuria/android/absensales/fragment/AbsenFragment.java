@@ -40,6 +40,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -62,7 +63,7 @@ public class AbsenFragment extends Fragment {
     private SQLiteHandler db;
     private TextView textDepot,textToko,textTanggal, textAttendance;
     private ImageView imgLokasi, imgCamera;
-    private String kode_sales, kode_toko, nama_toko, depot, address;
+    private String kode_sales, zona, nama_toko, depot, address;
     private String date = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
     private final int CAMERA_REQ = 27;
     private final String DISMIS = "DISMIS";
@@ -95,7 +96,7 @@ public class AbsenFragment extends Fragment {
 
         HashMap<String, String> sales = db.getSalesDetails();
         kode_sales = sales.get("kode_sales");
-        kode_toko = sales.get("kode_toko");
+        zona = sales.get("email");
         nama_toko = sales.get("nama_toko");
         depot = sales.get("depot");
 
@@ -302,7 +303,7 @@ public class AbsenFragment extends Fragment {
                                 if (mCurrentPhotoPath != null) {
                                     Bitmap bitmap = ImageLoader.init().from(mCurrentPhotoPath).requestSize(256, 256).getBitmap();
                                     String encodeImage = ImageBase64.encode(bitmap);
-                                    storeAttendance(kode_sales, textAttendance.getText().toString(), url, encodeImage);
+                                    storeAttendance(kode_sales, textAttendance.getText().toString(), url, encodeImage, zona);
                                 }else {
                                     viewSnackBar(fragmentView, "GAGAL MANGAMBIL CAMERA QR", DISMIS);
                                 }
@@ -403,7 +404,7 @@ public class AbsenFragment extends Fragment {
         AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
     }
 
-    private void storeAttendance(final String uid, final String address, final String url, final String encodeImage) {
+    private void storeAttendance(final String uid, final String address, final String url, final String encodeImage, final String zona) {
         // Tag used to cancel the request
         String tag_string_req = "req_attendance";
         pDialog = new ProgressDialog(getActivity());
@@ -439,9 +440,17 @@ public class AbsenFragment extends Fragment {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "Atttendance Error: " + error.getMessage());
-                Toast.makeText(getContext(),
-                        "Error Tidak bisa konek ke db "+error.getMessage(), Toast.LENGTH_LONG).show();
+                try {
+                    String responseBody = new String( error.networkResponse.data, "utf-8" );
+                    JSONObject jsonObject = new JSONObject( responseBody );
+                    viewSnackBar(fragmentView,jsonObject.getString("error_msg"),"DISMIS");
+                } catch ( JSONException e ) {
+                    viewSnackBar(fragmentView,"Connection fail..","DISMIS");
+                } catch (UnsupportedEncodingException ue_error){
+                    viewSnackBar(fragmentView,"Connection fail..","DISMIS");
+                } catch (Exception e){
+                    viewSnackBar(fragmentView,"Connection fail..","DISMIS");
+                }
                 hideDialog();
             }
         }) {
@@ -451,7 +460,8 @@ public class AbsenFragment extends Fragment {
                 // Posting params to register url
                 Map<String, String> params = new HashMap<String, String>();
                 //params.put("kode_sales", uid);
-                params.put("uid", uid);
+                params.put("kode_spg", uid);
+                params.put("zona",zona);
                 params.put("lokasi", address);
                 params.put("photo",encodeImage);
 

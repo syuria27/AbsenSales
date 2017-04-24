@@ -41,6 +41,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -235,8 +236,8 @@ public class HistoryFragment extends Fragment implements SimpleDatePickerDialog.
         pDialog = new ProgressDialog(getActivity());
         pDialog.setMessage("Get Data ...");
         showDialog();
-        StringRequest strReq = new StringRequest(Request.Method.POST,
-                AppConfig.URL_GET_ABSEN, new Response.Listener<String>() {
+        StringRequest strReq = new StringRequest(Request.Method.GET,
+                AppConfig.URL_GET_ABSEN+"/"+flag+"/"+kode_sales+"/"+bulan+"/"+tahun, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 Log.d(TAG, "Get data Response: " + response.toString());
@@ -247,7 +248,7 @@ public class HistoryFragment extends Fragment implements SimpleDatePickerDialog.
                     // Check for error node in json
                     if (!error) {
                         absenList = new ArrayList<Absen>();
-                        JSONArray data = jObj.getJSONArray("data");
+                        JSONArray data = jObj.getJSONArray("history");
                         for (int i = 0; i < data.length(); i++) {
                             JSONObject objData = data.getJSONObject(i);
                             if(objData.getString("jam_"+flag).equals("null")){
@@ -281,12 +282,21 @@ public class HistoryFragment extends Fragment implements SimpleDatePickerDialog.
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "Data error: " + error.getMessage());
-                Toast.makeText(getContext(),
-                        error.getMessage(), Toast.LENGTH_LONG).show();
+                try {
+                    String responseBody = new String( error.networkResponse.data, "utf-8" );
+                    JSONObject jsonObject = new JSONObject( responseBody );
+                    viewSnackBar(fragmentView,jsonObject.getString("error_msg"),"DISMIS");
+                } catch ( JSONException e ) {
+                    viewSnackBar(fragmentView,"Connection fail..","DISMIS");
+                } catch (UnsupportedEncodingException ue_error){
+                    viewSnackBar(fragmentView,"Connection fail..","DISMIS");
+                } catch (Exception e){
+                    viewSnackBar(fragmentView,"Connection fail..","DISMIS");
+                }
+                lvAbsenReport.setAdapter(null);
                 hideDialog();
             }
-        }) {
+        });/* {
             @Override
             protected Map<String, String> getParams() {
                 // Posting parameters to login url
@@ -299,7 +309,7 @@ public class HistoryFragment extends Fragment implements SimpleDatePickerDialog.
                 Log.d(TAG, "getParams: "+params.toString());
                 return params;
             }
-        };
+        };*/
         // Adding request to request queue
         AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
 

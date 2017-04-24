@@ -2,6 +2,8 @@ package com.syuria.android.absensales.activity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -29,6 +31,7 @@ import com.syuria.android.absensales.helper.SessionManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,11 +45,14 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressDialog pDialog;
     private SessionManager session;
     private SQLiteHandler db;
+    private CoordinatorLayout layoutLogin;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        layoutLogin = (CoordinatorLayout) findViewById(R.id.layoutLogin);
 
         // Progress dialog
         pDialog = new ProgressDialog(this);
@@ -181,47 +187,31 @@ public class LoginActivity extends AppCompatActivity {
 
                 try {
                     JSONObject jObj = new JSONObject(response);
-                    boolean error = jObj.getBoolean("error");
 
-                    // Check for error node in json
-                    if (!error) {
-                        // user successfully logged in
-                        // Create login session
-                        session.setLogin(true);
+                    // user successfully logged in
+                    // Create login session
+                    session.setLogin(true);
 
-                        // Now store the user in SQLite
-                        //String kode_sales = jObj.getString("kode_sales");
-                        String kode_sales = jObj.getString("uid");
+                    JSONObject sales = jObj.getJSONObject("user");
+                    String kode_spg = sales.getString("kode_spg");
+                    String nama_spg = sales.getString("nama_spg");
+                    String email = sales.getString("zona");
+                    String nama_toko = sales.getString("nama_toko");
+                    String depot = sales.getString("depot");
+                    //String created_at = saleS.getString("created_at");
 
-                        //JSONObject sales = jObj.getJSONObject("sales");
-                        JSONObject sales = jObj.getJSONObject("user");
-                        //String nama_sales = sales.getString("nama_sales");
-                        String nama_sales = sales.getString("name");
-                        String email = sales.getString("email");
-                        //String kode_toko = sales.getString("kode_toko");
-                        String nama_toko = sales.getString("nama_toko");
-                        String depot = sales.getString("depot");
-                        String created_at = sales
-                                .getString("created_at");
+                    // Inserting row in users table
+                    db.addUser(kode_spg,nama_spg,email,"",nama_toko,depot,"");
 
-                        // Inserting row in users table
-                        db.addUser(kode_sales, nama_sales, email, "", nama_toko, depot, created_at);
+                    // Launch main activity
+                    Intent intent = new Intent(LoginActivity.this,MainActivity.class);
+                    startActivity(intent);
+                    finish();
 
-                        // Launch main activity
-                        Intent intent = new Intent(LoginActivity.this,
-                                MainActivity.class);
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        // Error in login. Get the error message
-                        String errorMsg = jObj.getString("error_msg");
-                        Toast.makeText(getApplicationContext(),
-                                errorMsg, Toast.LENGTH_LONG).show();
-                    }
                 } catch (JSONException e) {
                     // JSON error
                     e.printStackTrace();
-                    Toast.makeText(getApplicationContext(), "Json error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    viewSnackBar(layoutLogin,e.getMessage(),"DISMIS");
                 }
 
             }
@@ -229,9 +219,17 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "Login Error: " + error.getMessage());
-                Toast.makeText(getApplicationContext(),
-                        error.getMessage(), Toast.LENGTH_LONG).show();
+                try {
+                    String responseBody = new String( error.networkResponse.data, "utf-8" );
+                    JSONObject jsonObject = new JSONObject( responseBody );
+                    viewSnackBar(layoutLogin,jsonObject.getString("error_msg"),"DISMIS");
+                } catch ( JSONException e ) {
+                    viewSnackBar(layoutLogin,"Connection fail..","DISMIS");
+                } catch (UnsupportedEncodingException ue_error){
+                    viewSnackBar(layoutLogin,"Connection fail..","DISMIS");
+                } catch (Exception e){
+                    viewSnackBar(layoutLogin,"Connection fail..","DISMIS");
+                }
                 hideDialog();
             }
         }) {
@@ -260,5 +258,17 @@ public class LoginActivity extends AppCompatActivity {
     private void hideDialog() {
         if (pDialog.isShowing())
             pDialog.dismiss();
+    }
+
+    private void viewSnackBar(View view, String message, String action){
+        Snackbar bar = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+                .setAction(action, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //v.setText("You pressed Dismiss!!");
+                    }
+                });
+        bar.setActionTextColor(getResources().getColor(R.color.colorAccent));
+        bar.show();
     }
 }
