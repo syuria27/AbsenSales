@@ -7,6 +7,7 @@ import android.app.DatePickerDialog;
 import android.app.DialogFragment;
 import android.app.ProgressDialog;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
@@ -127,7 +128,11 @@ public class HistoryFragment extends Fragment implements SimpleDatePickerDialog.
                         //v.setText("You pressed Dismiss!!");
                     }
                 });
-        bar.setActionTextColor(getResources().getColor(R.color.colorAccent));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            bar.setActionTextColor(getActivity().getResources().getColor(R.color.colorAccent, getActivity().getTheme()));
+        }else {
+            bar.setActionTextColor(getResources().getColor(R.color.colorAccent));
+        }
         bar.show();
     }
 
@@ -296,20 +301,7 @@ public class HistoryFragment extends Fragment implements SimpleDatePickerDialog.
                 lvAbsenReport.setAdapter(null);
                 hideDialog();
             }
-        });/* {
-            @Override
-            protected Map<String, String> getParams() {
-                // Posting parameters to login url
-                Map<String, String> params = new HashMap<String, String>();
-                //params.put("kode_sales", kode_sales);
-                params.put("uid", kode_sales);
-                params.put("bulan", String.valueOf(bulan));
-                params.put("tahun", String.valueOf(tahun));
-                params.put("flag",flag);
-                Log.d(TAG, "getParams: "+params.toString());
-                return params;
-            }
-        };*/
+        });
         // Adding request to request queue
         AppController.getInstance().addToRequestQueue(strReq, tag_string_req);
 

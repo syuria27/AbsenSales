@@ -3,6 +3,7 @@ package com.syuria.android.absensales.fragment;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -24,15 +25,15 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
-import com.kosalgeek.android.photoutil.CameraPhoto;
-import com.kosalgeek.android.photoutil.ImageBase64;
-import com.kosalgeek.android.photoutil.ImageLoader;
 import com.syuria.android.absensales.R;
 import com.syuria.android.absensales.app.AppConfig;
 import com.syuria.android.absensales.app.AppController;
 import com.syuria.android.absensales.helper.GPSTracker;
 import com.syuria.android.absensales.helper.LocationAddress;
 import com.syuria.android.absensales.helper.SQLiteHandler;
+import com.syuria.android.absensales.utils.CameraPhoto7;
+import com.syuria.android.absensales.utils.ImageBase64;
+import com.syuria.android.absensales.utils.ImageLoader;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,7 +69,7 @@ public class AbsenFragment extends Fragment {
     private final int CAMERA_REQ = 27;
     private final String DISMIS = "DISMIS";
     private String mCurrentPhotoPath, jenisAbsen;
-    private CameraPhoto cameraPhoto;
+    private CameraPhoto7 cameraPhoto7;
     private IntentIntegrator qrScan;
     private Button btnAbsenMasuk, btnAbsenPulang, btnSelfie;
 
@@ -92,7 +93,6 @@ public class AbsenFragment extends Fragment {
         textTanggal = (TextView) fragmentView.findViewById(R.id.textTanggal);
 
         db = new SQLiteHandler(getContext());
-//        cameraPhoto = new CameraPhoto(getContext());
 
         HashMap<String, String> sales = db.getSalesDetails();
         kode_sales = sales.get("kode_sales");
@@ -104,31 +104,17 @@ public class AbsenFragment extends Fragment {
         textDepot.setText(depot);
         textTanggal.setText(date);
 
-        /*btnSelfie = (Button) fragmentView.findViewById(R.id.btnSelfie);
-        btnSelfie.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    cameraPhoto = new CameraPhoto(getContext());
-                    startActivityForResult(cameraPhoto.takePhotoIntent(), CAMERA_REQ);
-                    //mCurrentPhotoPath = cameraPhoto.getPhotoPath();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    viewSnackBar(fragmentView, "CAMERA ERROR", DISMIS);
-                }
-            }
-        });*/
         imgCamera = (ImageView) fragmentView.findViewById(R.id.imgCamera);
         imgCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
-                    cameraPhoto = new CameraPhoto(getContext());
-                    startActivityForResult(cameraPhoto.takePhotoIntent(), CAMERA_REQ);
+                    cameraPhoto7 = new CameraPhoto7(getContext());
+                    startActivityForResult(cameraPhoto7.takePhotoIntent(), CAMERA_REQ);
                     //mCurrentPhotoPath = cameraPhoto.getPhotoPath();
                 } catch (IOException e) {
                     e.printStackTrace();
-                    viewSnackBar(fragmentView, "CAMERA ERROR", DISMIS);
+                    viewSnackBar(fragmentView, "CAMERA PERMISSION DENIED", DISMIS);
                 }
             }
         });
@@ -173,7 +159,7 @@ public class AbsenFragment extends Fragment {
             public void onClick(View view) {
                 SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
                 try {
-                    Date inTime = sdf.parse("08:30");
+                    Date inTime = sdf.parse("08:00");
                     Date CurrentTime = sdf.parse(sdf.format(new Date()));
 
                     if (CurrentTime.before(inTime)) {
@@ -232,7 +218,11 @@ public class AbsenFragment extends Fragment {
                         //v.setText("You pressed Dismiss!!");
                     }
                 });
-        bar.setActionTextColor(getResources().getColor(R.color.colorAccent));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            bar.setActionTextColor(getActivity().getResources().getColor(R.color.colorAccent, getActivity().getTheme()));
+        }else {
+            bar.setActionTextColor(getResources().getColor(R.color.colorAccent));
+        }
         bar.show();
     }
 
@@ -249,7 +239,7 @@ public class AbsenFragment extends Fragment {
         if(requestCode == CAMERA_REQ && resultCode == RESULT_OK){
             //setPic();
             //cameraPhoto.addToGallery();
-            mCurrentPhotoPath = cameraPhoto.getPhotoPath();
+            mCurrentPhotoPath = cameraPhoto7.getPhotoPath();
             if (mCurrentPhotoPath != null) {
                 try {
                     Bitmap bitmap = ImageLoader.init().from(mCurrentPhotoPath).requestSize(256, 256).getBitmap();
@@ -263,7 +253,7 @@ public class AbsenFragment extends Fragment {
                 viewSnackBar(fragmentView, "GAGAL MANGAMBIL FILE CAMERA", DISMIS);
             }
         }else if( requestCode == CAMERA_REQ && resultCode == RESULT_CANCELED) {
-            File file = new File(cameraPhoto.getPhotoPath());
+            File file = new File(cameraPhoto7.getPhotoPath());
             boolean delete = file.delete(); Log.i("delete",String.valueOf(delete));
             setNullSefie();
         }else if (result != null) {

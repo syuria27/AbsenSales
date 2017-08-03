@@ -51,20 +51,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
 
-<!--            <Button
-                android:id="@+id/btnSelfie"
+            <ImageView
+                android:id="@+id/imgCamera"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:text="selfie"/>
--->
-
-                <ImageView
-                    android:id="@+id/imgCamera"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:background="@drawable/ic_camera_alt_black_24dp" />
+                android:background="@drawable/ic_camera_alt_black_24dp" />
 
             <LinearLayout
                 android:id="@+id/lytIcon"
